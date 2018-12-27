@@ -241,4 +241,162 @@ plt.show()
 
 #building characteristics vs. saleprices
 
- 
+corr = building_df.corr()
+
+g = sns.heatmap(corr, annot = True, cmap = 'coolwarm', linewidths = 0.2, annot_kws = {'size':8})
+#g.get_xticklabels(labels=train['Neighborhood'], rotation = 90,fontsize = 8)
+fig = plt.gcf()
+fig.set_size_inches(14,10)
+plt.title('Building Characteristics Correlation', fontsize = 18)
+plt.xticks(fontsize = 14)
+plt.yticks(fontsize = 14)
+plt.show()
+
+train['Price_Range'] = np.nan # add a new blank column
+lst = [train]
+
+for column in lst:
+    column.loc[column['SalePrice'] < 150000, 'Price_Range'] = 'Low'
+    column.loc[(column['SalePrice'] >= 150000) & (column['SalePrice'] <= 300000), 'Price_Range'] = 'Medium'
+    column.loc[column['SalePrice'] > 300000, 'Price_Range'] = 'High'
+
+train.head()
+
+import matplotlib.pyplot as plt
+
+palette = ["#9b59b6", "#BDBDBD", "#FF8000"]
+sns.lmplot('GarageYrBlt', 'GarageArea', data=train, hue='Price_Range', fit_reg=False, size=7, palette=palette, markers=["o", "s", "^"])
+plt.title('Garage by Price Range', fontsize=18)
+plt.annotate('High Price \nCategory Garages \n are not that old', xy=(1997, 1100), xytext=(1950, 1200),arrowprops=dict(arrowstyle='->',facecolor='black'))
+plt.show()
+
+plt.style.use('seaborn-white')
+types_foundations = train.groupby(['Price_Range','PavedDrive']).size()
+types_foundations.unstack().plot(kind='bar',stacked = True, colormap = 'Set1',figsize = (13,11), grid=False)
+plt.ylabel('Number of Streets', fontsize = 16)
+plt.xlabel('Price Category', fontsize = 16)
+plt.xticks(rotation = 45, fontsize = 12)
+plt.yticks(rotation = 45, fontsize = 12)
+plt.title('Condition of the Street by Price Category', fontsize = 18)
+
+plt.show()
+           
+print(types_foundations)
+
+# We can see that CentralAir impacts until some extent the price of the house.
+
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, figsize=(14,10))
+plt.suptitle('Relationship between Saleprice \n and Categorical Utilities', fontsize=18)
+sns.pointplot(x='CentralAir', y='SalePrice', hue='Price_Range', data=train, ax=ax1)
+sns.pointplot(x='Heating', y='SalePrice', hue='Price_Range', data=train, ax=ax2)
+sns.pointplot(x='Fireplaces', y='SalePrice', hue='Price_Range', data=train, ax=ax3)
+sns.pointplot(x='Electrical', y='SalePrice', hue='Price_Range', data=train, ax=ax4)
+
+plt.legend(loc='best')
+plt.show()
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.style.use('seaborn-white')
+
+fig, ax = plt.subplots(figsize=(14,8))
+palette = ["#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#34495e", "#2ecc71", "#FF8000", "#AEB404", "#FE2EF7", "#64FE2E"]
+
+sns.swarmplot(x="OverallQual", y="SalePrice", data=train, ax=ax, palette=palette, linewidth=1)
+plt.title('Correlation between OverallQual and SalePrice', fontsize=18)
+plt.ylabel('Sale Price', fontsize=14)
+plt.show()
+
+with sns.plotting_context("notebook",font_scale=2.8):
+    g = sns.pairplot(train, vars=["OverallCond", "OverallQual", "YearRemodAdd", "SalePrice"],
+                hue="Price_Range", palette="Dark2", size=6)
+
+
+g.set(xticklabels=[]);
+
+plt.show()
+
+# What type of material is considered to have a positive effect on the quality of the house?
+# Let's start with the roof material
+
+with sns.plotting_context("notebook",font_scale=1):
+    g = sns.factorplot(x="SalePrice", y="RoofStyle", hue="Price_Range",
+                   col="YrSold", data=train, kind="box", size=5, aspect=.75, sharex=False, col_wrap=3, orient="h",
+                      palette='Set1');
+    for ax in g.axes.flatten(): 
+        for tick in ax.get_xticklabels(): 
+            tick.set(rotation=20)
+
+plt.show()
+
+with sns.plotting_context("notebook",font_scale=1):
+    g = sns.factorplot(x="MasVnrType", y="SalePrice", hue="Price_Range",
+                   col="YrSold", data=train, kind="bar", size=5, aspect=.75, sharex=False, col_wrap=3,
+                      palette="YlOrRd");
+    
+plt.show()
+
+plt.style.use('seaborn-white')
+types_foundations = train.groupby(['Neighborhood', 'OverallQual']).size()
+types_foundations.unstack().plot(kind='bar', stacked=True, colormap='RdYlBu', figsize=(13,11), grid=False)
+plt.ylabel('Overall Price of the House', fontsize=16)
+plt.xlabel('Neighborhood', fontsize=16)
+plt.xticks(rotation=90, fontsize=12)
+plt.title('Overall Quality of the Neighborhoods', fontsize=18)
+plt.show()
+
+fig, ax = plt.subplots(ncols = 2, figsize = (16,4)) # take the average
+plt.subplot(121)
+sns.pointplot(x="Price_Range", y = "YearRemodAdd", data = train, order = ["Low","Medium","High"], color = "#0099ff")
+plt.title("Average Remodeling by Price Category", fontsize = 16)             
+plt.xlabel('Price Category', fontsize=14)
+plt.ylabel('Average Remodeling Year', fontsize=14)
+plt.xticks(rotation=90, fontsize=12)
+
+
+plt.subplot(122) # take the average
+sns.pointplot(x="Neighborhood",  y="YearRemodAdd", data=train, color="#ff9933")
+plt.title("Average Remodeling by Neighborhood", fontsize=16)
+plt.xlabel('Neighborhood', fontsize=14)
+plt.ylabel('')
+plt.xticks(rotation=90, fontsize=12)
+plt.show()
+
+#Log Transformations to reduce the skewness
+#most skewed features
+
+numeric_features = train.dtypes[train.dtypes != "object"].index #set numeric value only columns as a list of indice
+skewed_features = train[numeric_features].apply(lambda x: skew(x.dropna())).sort_values(ascending=False) #train[numeric_fetures] creates new dataframe with only numeric value columns
+skewness = pd.DataFrame({'Skew' :skewed_features})
+skewness.head(5)
+
+from scipy.stats import norm
+
+log_style = np.log(train['SalePrice']) #log base e
+fig, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2, ncols=2, figsize=(14,10))
+plt.suptitle('Probability Plots', fontsize = 18)
+ax1 = sns.distplot(train['SalePrice'], color="#FA5858", ax=ax1, fit=norm) #fit = norm plots a normal graph on top of the distribution
+ax1.set_title("Distribution of Sales Price with Positive Skewness", fontsize=14)
+ax2 = sns.distplot(log_style, color="#58FA82",ax=ax2, fit=norm)
+ax2.set_title("Normal Distibution with Log Transformations", fontsize=14)
+ax3 = stats.probplot(train['SalePrice'], plot=ax3)
+ax4 = stats.probplot(log_style, plot=ax4)
+
+plt.show()
+
+#check the skewness and kurtosis numbers for SalePrice and log(SalePrice)
+
+print('Skewness for Normal D.: %f'% train['SalePrice'].skew())
+print('Skewness for Log D.: %f'% log_style.skew())
+print('Kurtosis for Normal D.: %f' % train['SalePrice'].kurt())
+print('Kurtosis for Log D.: %f' % log_style.kurt())
+
+#outlier analysis
+
+fig = plt.figure(figsize=(12,8))
+ax = sns.boxplot(x="YrSold", y="SalePrice", hue='Price_Range', data=train)
+plt.title('Detecting outliers', fontsize=16)
+plt.xlabel('Year the House was Sold', fontsize=14)
+plt.ylabel('Price of the house', fontsize=14)
+plt.show()
+
